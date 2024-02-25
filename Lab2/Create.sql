@@ -1,0 +1,37 @@
+USE db;
+CREATE TABLE tblClient (
+intClientId INT PRIMARY KEY IDENTITY(1, 1),
+txtClientSurname NVARCHAR(30) NOT NULL,
+txtClientName NVARCHAR(25) NOT NULL,
+txtClientSecondName NVARCHAR(30) NULL,
+txtClientAddress NVARCHAR(100) NULL,
+txtClientPassportNumber NVARCHAR(10) NOT NULL
+);
+CREATE TABLE tblRoom (
+intRoomNumber INT PRIMARY KEY IDENTITY(1, 1),
+txtRoomDescription NVARCHAR(255) NOT NULL,
+intFloor INT NOT NULL,
+fltRoomPrice DECIMAL(18,2) NOT NULL
+);
+CREATE TABLE tblVisit (
+intVisitId INT PRIMARY KEY IDENTITY(1, 1),
+intClientId INT REFERENCES tblClient (intClientId) ON DELETE NO ACTION ON UPDATE CASCADE,
+intRoomNumber INT REFERENCES tblRoom (intRoomNumber) ON DELETE NO ACTION ON UPDATE CASCADE,
+datBegin DATE NOT NULL,
+datEnd DATE NOT NULL,
+fltRoomSum DECIMAL(18, 2) NOT NULL,
+fltServiceSum DECIMAL(18, 2) NOT NULL
+);
+CREATE TABLE tblServiceType (
+intServiceTypeId INT PRIMARY KEY IDENTITY(1, 1),
+txtServiceTypeName NVARCHAR(100) NOT NULL,
+fltServiceTypePrice DECIMAL(18,2) NOT NULL
+);
+CREATE TABLE tblService (
+intServiceId INT PRIMARY KEY IDENTITY(1, 1),
+intServiceTypeId INT REFERENCES tblServiceType (intServiceTypeId) ON DELETE NO ACTION ON UPDATE CASCADE,
+intVisitId INT REFERENCES tblVisit (intVisitId) ON DELETE NO ACTION ON UPDATE CASCADE,
+intServiceCount INT NOT NULL,
+fltServiceSum DECIMAL(18,2) NOT NULL,
+datServiceDate DATE NOT NULL
+);
