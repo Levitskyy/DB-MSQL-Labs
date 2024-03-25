@@ -23,72 +23,7 @@ main_frame = MainFrame(cursor, tab1)
 main_frame.pack(anchor='nw', expand=True, fill='both')
 
 
-TABLE_DATA = (
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-        ("First name", "Last name", "Age", "City"),
-        ("Jules", "Smith", "34", "San Juan"),
-        ("Mary", "Ramos", "45", "Orlando"),
-        ("Carlson", "Banks", "19", "Los Angeles"),
-        ("Lucas", "Cimon12", "31", "Saint-Mathurin-sur-Loire"),
-    )
-
-
-def pdf_com():
-    pdf = PDF()
-    pdf.create_table(TABLE_DATA)
-    pdf.output('table.pdf')
-
-pdf_btn = ttk.Button(tab2, text='Create pdf', command=pdf_com)
-pdf_btn.pack()
+pdf_tab = PDFWindow(cursor, tab2)
 
 # Передача управления пользователю
 root.mainloop()

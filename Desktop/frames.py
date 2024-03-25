@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from pyodbc import *
+from pdf import PDF
 import mydb
 
 class TreeviewFrame(ttk.Frame):
@@ -58,7 +59,9 @@ class MainFrame(ttk.Frame):
           curItem = self.table.treeview.focus()
           itemValue = self.table.treeview.item(curItem)
           visitId = int(itemValue['values'][0])
-          clientId = int(itemValue['values'][3][-2])
+          clientIdPosStart = itemValue['values'][3].find('(') + 1
+          clientIdPosEnd = itemValue['values'][3].find(')')
+          clientId = int(itemValue['values'][3][clientIdPosStart:clientIdPosEnd])
           infoWindow = VisitInfoWindow(cursor=self.cursor, visitId=visitId, clientId=clientId)
 
 class NewVisitWindow(tk.Toplevel):
@@ -296,3 +299,59 @@ class NewServiceWindow(tk.Toplevel):
                serviceDate=self.dateBeginInput.get()
           )
           self.destroy()
+
+
+class PDFWindow(ttk.Frame):
+     def __init__(self, cursor: Cursor, *args, **kwargs):
+          super().__init__(*args, **kwargs)
+          
+          self.cursor = cursor
+
+          self.serviceFrame = ttk.Frame(self, borderwidth=1, relief='solid', padding=[5, 5])
+          self.services_pdf_btn = ttk.Button(self.serviceFrame, text='Создать PDF с услугами', command=self.services_pdf_com)
+          self.services_pdf_btn.pack(anchor='nw')
+          self.serviceFrame.pack(anchor='nw', fill='x', padx=5, pady=5)
+
+
+          self.pack(anchor='nw')
+
+     def services_pdf_com(self):
+          cursor = self.cursor
+
+          pdf = PDF()
+          cursor.execute(f'''
+               SELECT *
+               FROM tblServiceType
+                         ''')
+
+          service_types = cursor.fetchall()
+          service_clients = {}
+          finalizing_reports = {}
+          for i in service_types:
+               cursor.execute(f'''
+                    SELECT CONCAT(c.txtClientSurname, ' ', c.txtClientName, ' ', c.txtClientSecondName),
+                         c.txtClientAddress, c.txtClientPassportNumber,
+                         SUM(s.intServiceCount), SUM(s.fltServiceSum)  
+                    FROM tblService as s
+                    JOIN tblVisit AS v ON v.intVisitId = s.intVisitId
+                    JOIN tblClient AS c ON v.intClientId = c.intClientId
+                    WHERE s.intServiceTypeId = {i[0]}
+                    GROUP BY CONCAT(c.txtClientSurname, ' ', c.txtClientName, ' ', c.txtClientSecondName), c.txtClientAddress, c.txtClientPassportNumber
+                              ''')
+               service_clients[i[0]] = cursor.fetchall()
+               finalizing_reports[i[0]] = (str(len(service_clients[i[0]])), str(sum(x[4] for x in service_clients[i[0]])))
+               service_clients[i[0]].insert(0, ('Name', 'Address', 'Passport', 'Amount', 'Sum'))
+               pdf.write(text=f"\nService: {i[1]}    Price: {i[2]}\n")
+               pdf.create_table(service_clients[i[0]])
+               
+               pdf.write(text=f'\nAmount of clients: {finalizing_reports[i[0]][0]}  Final sum: {finalizing_reports[i[0]][1]}\n')
+
+          unique_clients = set(y[0] for x in service_clients.items() for y in x[1][1:])
+          average_service_cost = str("{:.2f}".format((sum(float(y[4]) / float(y[3]) for x in service_clients.items() for y in x[1][1:]) / sum(len(x[1:]) for x in service_clients.items()))))
+          pdf.write(text='\n\n' + '-' * 80 + '\n\n')
+          pdf.write(text='Clients: ')
+          for client in unique_clients:
+               pdf.write(text=f'{client}, ')
+          pdf.write(text=f'\nAverage service cost: {average_service_cost}\n')
+          pdf.output('Services.pdf')
+          
