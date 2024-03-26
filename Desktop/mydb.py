@@ -76,3 +76,9 @@ def new_service(cursor: Cursor, serviceType, visitId, serviceCount, serviceSum, 
                    ({serviceType}, {visitId}, {serviceCount}, {serviceSum}, '{serviceDate}')
                    ''')    
     cursor.commit()
+
+def get_all_rooms(cursor: Cursor):
+    cursor.execute(f'''
+                    SELECT intRoomNumber FROM tblRoom
+                    ''')
+    return list(x[0] for x in cursor.fetchall())

@@ -317,6 +317,14 @@ class PDFWindow(ttk.Frame):
           self.clients_pdf_btn.pack(anchor='nw')
           self.clientsFrame.pack(anchor='nw', fill='x', padx=5, pady=5)
 
+          self.roomsFrame = ttk.Frame(self, borderwidth=1, relief='solid', padding=[5, 5])
+          roomTypes_list = mydb.get_all_rooms(self.cursor)
+          self.roomTypeList = ttk.Combobox(self.roomsFrame, values=roomTypes_list, state='readonly')
+          self.rooms_pdf_btn = ttk.Button(self.roomsFrame, text='Создать PDF с комнатами', command=self.rooms_pdf_com)
+          self.roomTypeList.pack(anchor='nw')
+          self.rooms_pdf_btn.pack(anchor='nw')
+          self.roomsFrame.pack(anchor='nw', fill='x', padx=5, pady=5)
+
 
           self.pack(anchor='nw')
 
@@ -413,3 +421,44 @@ class PDFWindow(ttk.Frame):
                clientSpendings = sum(x[0] for x in clientSpendingsList) + sum(x[1] for x in clientSpendingsList)
                pdf.write(text=f'\n\nClient spendings: {clientSpendings}\n\n')
           pdf.output('Clients.pdf')
+
+     def rooms_pdf_com(self):
+          cursor = self.cursor
+          pdf = PDF()
+          roomNumber = self.roomTypeList.get()
+          roomInfo = cursor.execute(f'''
+                                   SELECT intRoomNumber, intFloor,
+                                    fltRoomPrice, txtRoomDescription
+                                    FROM tblRoom
+                                    WHERE intRoomNumber = {roomNumber}
+                                   ''').fetchone()
+          pdf.write(text=f'Room number: {roomInfo[0]}, Floor: {roomInfo[1]}, Room price: {roomInfo[2]}\n')
+          pdf.write(text=f'Room description: {roomInfo[3]}\n\n')
+
+          clientList = cursor.execute(f'''
+                                        SELECT
+                                             C.intClientId,
+                                             C.txtClientSurname + ' ' + C.txtClientName + ' ' + C.txtClientSecondName,
+                                             C.txtClientAddress,
+                                             C.txtClientPassportNumber,
+                                             V.datBegin,
+                                             V.datEnd
+                                        FROM tblClient AS C
+                                        JOIN tblVisit V ON V.intClientId = C.intClientId AND V.intRoomNumber = {roomNumber}                                       
+                                        ''').fetchall()
+          for client in clientList:
+               pdf.write(text=f'Name: {client[1]}, Address: {client[2]}, Passport: {client[3]}\n')
+               pdf.write(text=f'Date begin: {client[4]}, Date end: {client[5]}\n\n')
+
+               serviceList = cursor.execute(f'''
+                                             SELECT ST.txtServiceTypeName,
+                                             S.datServiceDate, ST.fltServiceTypePrice
+                                             FROM tblService AS S
+                                             JOIN tblServiceType AS ST ON ST.intServiceTypeId = S.intServiceTypeId
+                                             JOIN tblVisit as V ON V.intClientId = {client[0]} AND V.intVisitId = S.intVisitId
+                                             ORDER BY S.datServiceDate
+                                             ''').fetchall()
+               serviceList.insert(0, ('Service', 'Date', 'Price'))
+               pdf.create_table(serviceList)
+               pdf.write(text='\n\n')
+          pdf.output(f'Room{roomNumber}.pdf')
