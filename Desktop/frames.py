@@ -312,6 +312,11 @@ class PDFWindow(ttk.Frame):
           self.services_pdf_btn.pack(anchor='nw')
           self.serviceFrame.pack(anchor='nw', fill='x', padx=5, pady=5)
 
+          self.clientsFrame = ttk.Frame(self, borderwidth=1, relief='solid', padding=[5, 5])
+          self.clients_pdf_btn = ttk.Button(self.clientsFrame, text='Создать PDF с клиентами', command=self.clients_pdf_com)
+          self.clients_pdf_btn.pack(anchor='nw')
+          self.clientsFrame.pack(anchor='nw', fill='x', padx=5, pady=5)
+
 
           self.pack(anchor='nw')
 
@@ -354,4 +359,57 @@ class PDFWindow(ttk.Frame):
                pdf.write(text=f'{client}, ')
           pdf.write(text=f'\nAverage service cost: {average_service_cost}\n')
           pdf.output('Services.pdf')
-          
+
+     def clients_pdf_com(self):
+          cursor = self.cursor
+
+          pdf = PDF()
+
+          cursor.execute(f'''
+                         SELECT intClientId, CONCAT(txtClientSurname, ' ', txtClientName, ' ', txtClientSecondName),
+                         txtClientAddress, txtClientPassportNumber
+                         FROM tblClient
+                         ''')
+          clients = cursor.fetchall()
+
+          for client in clients:
+               pdf.write(text=f'Name: {client[1]}, Address: {client[2]}, Passport: {client[3]}')
+               pdf.write(text='\n  Visits:\n')
+               
+               cursor.execute(f'''
+                              SELECT intVisitId, datBegin, datEnd, intRoomNumber
+                              FROM tblVisit
+                              WHERE tblVisit.intClientId = {client[0]}
+                              ''')
+               visits = cursor.fetchall()
+               for visit in visits:
+                    pdf.write(text=f'    Visit {visit[0]}:  Begin date: {visit[1]}, End date: {visit[2]}, Room number: {visit[3]}\n')
+
+                    cursor.execute(f'''
+                                   SELECT s.datServiceDate, s.intServiceCount, st.fltServiceTypePrice,
+                                   st.txtServiceTypeName, s.fltServiceSum
+                                   FROM tblService AS s
+                                   JOIN tblServiceType AS st ON st.intServiceTypeId = s.intServiceTypeId
+                                   WHERE s.intVisitId = {visit[0]}
+                                   ''')
+                    services = cursor.fetchall()
+                    pdf.write(text='      Services:\n')
+                    for service in services:
+                         pdf.write(text=f'          Date: {service[0]}\n')
+                         pdf.write(text=f'          Amount: {service[1]}\n')
+                         pdf.write(text=f'          Price: {service[2]}\n')
+                         pdf.write(text=f'          Name: {service[3]}\n')
+                         pdf.write(text=f'          Full Price: {service[4]}\n')
+                         pdf.write(text='\n')
+                    visitSum = sum(x[4] for x in services)
+                    servCount = sum(x[1] for x in services)
+                    pdf.write(text=f'\n      Visit services price: {visitSum}, Services count: {servCount}\n\n')
+
+               clientSpendingsList = cursor.execute(f'''
+                                                SELECT SUM(fltRoomSum), SUM(fltServiceSum)
+                                                FROM tblVisit
+                                                WHERE tblVisit.intClientId = {client[0]}
+                                                ''').fetchall()
+               clientSpendings = sum(x[0] for x in clientSpendingsList) + sum(x[1] for x in clientSpendingsList)
+               pdf.write(text=f'\n\nClient spendings: {clientSpendings}\n\n')
+          pdf.output('Clients.pdf')
